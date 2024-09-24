@@ -5,12 +5,16 @@ var lerp_speed : float = 10.0
 var mouse_sens : float = 0.3
 
 const walking_speed : int = 5
-const sprinting_speed : int = 8
+const sprinting_speed : int = 7
 const air_speed : int = 2
-const sit_speed : int = 5
+const sit_speed : int = 3
 const jump_velocity : int = 6
+const sit_deep : float = -0.55
 
 @onready var head: Node3D = $Head
+@onready var stand_collision: CollisionShape3D = $StandCollision
+@onready var sit_collision: CollisionShape3D = $SitCollision
+@onready var on_up_head_collision: CollisionShape3D = $OnUpHeadCollision
 
 var direction = Vector3.ZERO
 
@@ -24,10 +28,19 @@ func _input(event: InputEvent) -> void:
 		head.rotation.x = clamp(head.rotation.x,deg_to_rad(-80),deg_to_rad(85))
 
 func _physics_process(delta: float) -> void:
-	if Input.is_action_pressed("SPRINT"):
-		current_speed = sprinting_speed
+	if Input.is_action_pressed("SIT"):
+		head.position.y = lerp(head.position.y, 0.662 + sit_deep, delta*lerp_speed)
+		current_speed = sit_speed
+		stand_collision.disabled = true
+		sit_collision.disabled = false
 	else:
-		current_speed = walking_speed
+		stand_collision.disabled = false
+		sit_collision.disabled = true
+		head.position.y = lerp(head.position.y, 0.662, delta*lerp_speed)
+		if Input.is_action_pressed("SPRINT"):
+			current_speed = sprinting_speed
+		else:
+			current_speed = walking_speed
 	
 	if not is_on_floor():
 		velocity += get_gravity()*2 * delta
